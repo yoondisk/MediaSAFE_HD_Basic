@@ -16,7 +16,7 @@
 
 ## 개발방법
 
-## 라이선스
-SEE <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/LICENSE.md">License</a>
+## LICENSE
+MediaSAFE_HD_Basic is <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/LICENSE.md">licensed</a> under the GPL, Version 2.0.
 
 ## 참여방법
