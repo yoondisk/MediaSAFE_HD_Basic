@@ -17,5 +17,6 @@
 ## 개발방법
 
 ## 라이선스
+SEE <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/LICENSE.md">License</a>
 
 ## 참여방법
