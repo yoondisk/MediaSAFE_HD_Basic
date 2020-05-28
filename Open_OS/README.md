@@ -1,3 +1,5 @@
-# yoondisk
-윤디스크 개방형 OS의 설치형 디지털 저작권 관리 및 지원하는 동영상 플레이어 개발
+# OpenOS 각 데미안 커널 버전
+Tmax / 데비안 - 4.19 0-6amd64
+Hamonica / 데비안 -  4.15 0-54-gener
+Gooroom / 데비안 - 4.19 0-8-amd
 
