@@ -3,7 +3,7 @@
 
 ## 시스템 구성도 및 사용 도구
 <div width="100%" style="text-align:center;">
-  <img src="https://user-images.githubusercontent.com/46548273/83016392-d50c2600-a05c-11ea-9cc9-94e17101590c.png">  
+  <img src="https://user-images.githubusercontent.com/46548273/83089432-44236200-a0d1-11ea-8710-839d11d9ec64.png">  
 </div>
 
 *&#35;Client&#35;*<br>Debian <br><br>
