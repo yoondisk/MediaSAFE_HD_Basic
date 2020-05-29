@@ -12,7 +12,5 @@
 
 <br>
 
-[설치방법](https://user-images.githubusercontent.com/65989186/83239666-3c4be680-a1d3-11ea-89f8-62a266a6faba.png)
-
-# OpenOS 설치방법 - Tmax
-<img src="https://user-images.githubusercontent.com/65989186/83239666-3c4be680-a1d3-11ea-89f8-62a266a6faba.png">
+# OpenOS 설치안내
+**[TmaxOS - 설치 가이드]** (https://user-images.githubusercontent.com/65989186/83239666-3c4be680-a1d3-11ea-89f8-62a266a6faba.png)
