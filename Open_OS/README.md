@@ -13,3 +13,4 @@
 <br>
 
 # OpenOS 설치방법 - Tmax
+<img src="https://user-images.githubusercontent.com/65989186/83239666-3c4be680-a1d3-11ea-89f8-62a266a6faba.png">
