@@ -12,4 +12,4 @@
 
 <br>
 
-# OpenOS 설치방법 - 티맥스
+# OpenOS 설치방법 - Tmax
