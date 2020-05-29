@@ -8,9 +8,9 @@
 1. 리눅스 shall 실행
 2. uname -r 명령어 입력
 3. 커널 버전 확인
-  - 하모니카 -> 4.15
-  - 구름 -> 4.19
-  - 티맥스 -> 4.19
+    - Harmony -> 4.15
+    - Gooroom -> 4.19
+    - Tmax -> 4.19
 
 ※ PC마다 다르니 확인할 것
 
@@ -33,5 +33,19 @@
 1. Debian iso 파일 [다운로드](https://www.debian.org/distrib/)
 2. USB (1GB 이상)
 
+### 2. 2 debian OS USB 설치 프로그램
+* [guiformat](http://www.ridgecrop.demon.co.uk/index.htm?guiformat.htm)
+* [universal_usb_installer](https://www.techspot.com/downloads/6153-universal-usb-installer.html)
 
-완료후 추후 작성 예정
+### 2. 3 BIOS 설정
+* 설치 전 다른 OS 설치되어 있을 시 혹은 OS 미설치 워크스테이션 설정하기 
+
+ -> [참고사이트](https://maternalgrandfather.tistory.com/entry/UEFI%EB%A1%9C-%EC%9C%88%EB%8F%84%EC%9A%B010-%EC%84%A4%EC%B9%98%EC%8B%9C-%EB%B0%94%EC%9D%B4%EC%98%A4%EC%8A%A4-%EC%84%A4%EC%A0%95%ED%95%98%EB%8A%94-%EB%B2%95)
+
+</br>
+
+## 3. 설치 
+
+
+
+
