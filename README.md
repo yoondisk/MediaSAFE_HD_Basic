@@ -17,9 +17,9 @@
 *&#35;Web Browser#35;*<br>Chromium based browser <br><br>
 
 ## 목표
- ◦ 개방형OS(Operating System-운영체제) PC에 설치 후 서비스 이용이 가능한 Digital Rights Management (디지털 저작권 관리, 이하 DRM) 플레이어 플랫폼.
- ◦ 개방형OS PC에 설치형 DRM 플레이어를 개발
- ◦ 개방형OS DRM 플레이어 세부 기능
+ ◦ 개방형OS(Operating System-운영체제) PC에 설치 후 서비스 이용이 가능한 Digital Rights Management (디지털 저작권 관리, 이하 DRM) 플레이어 플랫폼.<br>
+ ◦ 개방형OS PC에 설치형 DRM 플레이어를 개발<br>
+ ◦ 개방형OS DRM 플레이어 세부 기능<br>
 - HTTP, RTSP 전송 프로토콜 지원 기능
 - 생방송 영상 중계 URL 암호화 기능
 - 배속기능 및 임의 위치 재생 기능
@@ -27,7 +27,7 @@
 - 해상도 변경 기능 및 볼륨 조절 기능
 
 ## 효과
- ◦개방형OS를 이용하는 PC및 클라우드 환경에서, 
+ ◦개방형OS를 이용하는 PC및 클라우드 환경에서, <br>
   생방송, 영상 콘텐츠 서비스시에 콘텐츠의 안전한 보호와 불법적 유출을 방지.  
  
 ## <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/LICENSE.md">LICENSE</a>
