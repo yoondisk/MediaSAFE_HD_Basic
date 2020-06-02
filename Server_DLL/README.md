@@ -9,4 +9,5 @@ VOD 영상 (mp4) 형태의 파일을 SEED 암호화를 통해 Client Application
 ## 참고자료
  - 개념 : https://winapp81.tistory.com/48
  - 암호화 : Client data push Seed 128 cbc data encrypt decrypt
- - 개발도구 : visaul studio vc++ 10
+ - 개발도구 : visual studio vc++ 10
+             (다운로드 링크 : https://my.visualstudio.com/Downloads?q=Visual%20Studio%202010%20Professional&pgroup=)
