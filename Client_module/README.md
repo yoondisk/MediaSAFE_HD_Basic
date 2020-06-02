@@ -15,3 +15,9 @@
   https://gist.github.com/gautiermichelin/55e5d67c217bd216b9680a668bb47871<br>
   https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu<br>
   https://www.it-swarm.dev/ko/libraries/%EC%9A%B0%EB%B6%84%ED%88%AC%EC%97%90-ffmpeg%EC%9D%98-%EC%B5%9C%EC%8B%A0-%EA%B0%9C%EB%B0%9C-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC%EB%A5%BC-%EC%96%B4%EB%96%BB%EA%B2%8C-%EC%84%A4%EC%B9%98%ED%95%A9%EB%8B%88%EA%B9%8C/961615929/ 
+
+* 암호화 : Web Browser/SERVER DLL data Seed 128 cbc data encrypt decrypt
+
+* 개발도구 : Visual Studio Code Linux C++<br>
+
+(개발도구 다운로드 링크 : https://code.visualstudio.com/download)
