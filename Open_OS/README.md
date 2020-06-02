@@ -14,3 +14,4 @@
 
 # OpenOS 설치안내
 - [TmaxOS - 설치 가이드](https://user-images.githubusercontent.com/65989186/83239666-3c4be680-a1d3-11ea-89f8-62a266a6faba.png)
+- [HamosicaOS - 설치 가이드](https://user-images.githubusercontent.com/65989186/83501930-d1b0e880-a4fb-11ea-9976-90e9fa51c616.png)
