@@ -8,9 +8,9 @@
 1. 리눅스 shall 실행
 2. uname -r 명령어 입력
 3. 커널 버전 확인
-    - Harmony -> 4.15
-    - Gooroom -> 4.19
-    - Tmax -> 4.19
+    - Harmony OS -> 4.15 version
+    - Gooroom OS -> 4.19 version
+    - Tmax OS -> 4.19 version
 
 ※ PC마다 다르니 확인할 것
 
@@ -24,7 +24,7 @@
 * Debian7 Wheezy
   * 3.2 지원
 
-※ 하모니카 4.19도 호환가능 연락확인 -> Debian10으로 진행
+※ Harmony OS 4.15 -> 4.19도 호환가능 연락 확인 -> Debian10으로 진행
 
 </br>
 
