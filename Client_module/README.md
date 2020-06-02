@@ -18,6 +18,6 @@
 
 * 암호화 : Web Browser/SERVER DLL data Seed 128 cbc data encrypt decrypt
 
-* 개발도구 : Visual Studio Code Linux C++<br>
+* 개발도구 : Visual Studio Code<br>
 
 (개발도구 다운로드 링크 : https://code.visualstudio.com/download)
