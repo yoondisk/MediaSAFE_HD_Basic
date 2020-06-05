@@ -46,6 +46,8 @@
 
 ## 3. 설치 
 
+1. [Grphic Install Gudie](https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/Debian_Install/Graphic_Install_Guide.md)
+
 
 
 
