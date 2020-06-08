@@ -48,6 +48,7 @@
 
 1. [Grphic Install Guide](https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/Debian_Install/Graphic_Install_Guide.md)
 
+<img src="https://user-images.githubusercontent.com/65989325/84010077-1bdc1300-a9af-11ea-94d7-6d19789876c0.png">
 
 
 
