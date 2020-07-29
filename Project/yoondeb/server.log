@@ -1,0 +1,10 @@
+192.168.0.3 playlist.m3u8 9
+192.168.0.34 /key.htm HTTP/1.1
+Transfer-Encoding: chunked
+User-Agent: Lavf/58.44.100
+Accept: */*
+Connection: close
+Host: 192.168.0.34:8080
+Icy-MetaData: 1
+
+ 0

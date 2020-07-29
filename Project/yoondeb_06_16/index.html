@@ -1,0 +1,75 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+	body {font-size: 14px;}
+</style>
+<link href="css/video-js.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+
+<body style="padding:0px; height:100%;">
+<video  id='hls-example'  class="video-js vjs-default-skin vjs-big-play-button vjs-big-play-centered" width="800" height="450" controls  preload="none" >
+</video>
+
+<textarea id="info" style="margin: 0px; height: 200px; width: 800px; overflow: scroll; background-color: #F6F7F8;" >
+</textarea>
+
+<!-- JS code -->
+<script src="js/video.js"></script>
+
+<script>
+	var timestamp = new Date().getTime();
+	function numFormat(variable) { variable = Number(variable).toString(); if(Number(variable) < 10 && variable.length == 1) variable = "0" + variable; return variable; }
+	
+	function rpad(str, padLen, padStr) {
+		if (padStr.length > padLen) {
+			return str + "";
+		}
+		str += ""; // 문자로
+		padStr += ""; // 문자로
+		while (str.length < padLen)
+			str += padStr;
+		str = str.length >= padLen ? str.substring(0, padLen) : str;
+		return str;
+	}
+
+	function log_(a){
+		let today = new Date();   
+		let hours = today.getHours(); // 시
+		let minutes = today.getMinutes();  // 분
+		let seconds = today.getSeconds();  // 초
+		let milliseconds = today.getMilliseconds(); // 밀리초
+		let stamp=numFormat(hours) + ':' + numFormat(minutes) + ':' + numFormat(seconds) + '.' + milliseconds;
+		$('#info').val($('#info').val()+"[VideoJs Event] "+rpad(a,10," ")+" ("+stamp+")\r\n");	
+	}
+
+	var player = videojs('hls-example');
+	player.src([
+		 { type: "video/mp4", src: "http://192.168.0.34:9000/rtsp.mp4?"+timestamp },
+	]);	
+	
+	player.on('waiting', function() {
+		log_("Waiting");
+	});
+
+	player.on('pause', function() {
+		log_("Pause");
+	});
+
+	player.on("play", function() {
+		log_("Play");
+	});
+
+	player.on('playing', function() {
+		log_("Playing");
+	});
+
+	player.on("ready",function(){
+		log_("Ready");
+    });
+
+	// http://3jedu-wowza-cdn.daouidc.com/vod_free/2020_free/hd_gu_in_02b02_09.mp4
+	
+	
+</script>
+
