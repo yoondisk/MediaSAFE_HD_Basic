@@ -798,5 +798,4 @@ static function SEED_ECB_Encrypt( &$pbszUserKey, &$message, $message_offset, $me
 		return $result;
 	}
 }
-
 ?>
