@@ -1,13 +1,65 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <unistd.h>
+#include <time.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h> 
 #include <libavformat/avio.h>
 #include <libavdevice/avdevice.h>
+#include <libavutil/fifo.h>
 
-void rtsp_hls(char * url){
-	 
+
+
+#define D_PB_BUF_SIZE 65535
+
+uint8_t* pb_Buf;
+int send_sock;
+
+
+int vod_exit=0;
+int write_status_flag=0;
+clock_t start1, start2, end1, end2;
+
+static int write_buffer(void *opaque, uint8_t *buf, int buf_size)
+{
+		fd_set readfds;
+		struct timeval tv;
+		FD_ZERO(&readfds);
+        FD_SET(send_sock, &readfds);
+        // 약 0.1초간 기다린다. 
+        tv.tv_sec = 0.01;
+        tv.tv_usec = 0;
+
+        // 소켓 상태를 확인 한다. 
+       int state = select(send_sock+1, &readfds,(fd_set *)0, (fd_set *)0, &tv);
+	   write_status_flag++;
+		if (write_status_flag==100){
+			write_status_flag=0;
+			printf("[send] socket: %d , buffsize: %d , state: %d \n",send_sock,buf_size,state); 
+		}
+	   if (state==1){
+		   printf("[send] socket: %d , buffsize: %d , state: %d \n",send_sock,buf_size,state); 
+		   //sleep(5);
+		   vod_exit=1;
+		   return buf_size;
+	   }else{
+			if (write(send_sock,buf,buf_size)<=0){
+				printf("[send err] socket: %d , buffsize: %d \n",send_sock,buf_size); 	
+			}
+	   }
+
+
+	
+	
+	return buf_size;
+}
+
+void rtsp_hls(char * url,int websocket){
+	 start1 = clock();
+
+	 send_sock=websocket;
+	 vod_exit=0;
+		 
 	 // ffmpeg lib init
 	 av_register_all(); 
 	 avcodec_register_all(); 
@@ -15,7 +67,8 @@ void rtsp_hls(char * url){
 
 
 	 // Initialize
-	 int vidx = 0, aidx = 0; // Video, Audio Index
+	 int in_video_index, in_audio_index,  out_video_index, out_audio_index;  // Video, Audio Index
+	 int ret;
 	 AVFormatContext* ctx = avformat_alloc_context(); 
 	 AVDictionary *dicts = NULL;
 	 AVFormatContext* oc = NULL; 
@@ -23,12 +76,25 @@ void rtsp_hls(char * url){
 
 	 const char *rtsp_url=url;
 
-	 avformat_alloc_output_context2(&oc, NULL, "hls", "playlist.m3u8"); // apple hls. If you just want to segment file use "segment"
+	 avformat_alloc_output_context2(&oc, NULL, "mp4", NULL); // mp4
+
+	 pb_Buf = (uint8_t*)av_malloc(sizeof(uint8_t)*(D_PB_BUF_SIZE));
+	 oc->pb = avio_alloc_context(pb_Buf, D_PB_BUF_SIZE,1,0,NULL,write_buffer,NULL);
+
+	oc->pb->write_flag = 1;
+    oc->pb->seekable = 1;
+    oc->flags=AVFMT_FLAG_CUSTOM_IO;
+    oc->flags |= AVFMT_FLAG_FLUSH_PACKETS;
+    oc->flags |= AVFMT_NOFILE;
+    oc->flags |= AVFMT_FLAG_AUTO_BSF;
+    oc->flags |= AVFMT_FLAG_NOBUFFER;
+
 	 int rc = av_dict_set(&dicts, "rtsp_transport", "tcp", 0); // default udp. Set tcp interleaved mode
+	 av_dict_set(&dicts, "buffer_size", "655360", 0); 
+
 	 if (rc < 0){
 		return EXIT_FAILURE;
 	 }
-
 	 /* 
 	 rc = av_dict_set(&dicts, "stimeout", "1 * 1000 * 1000", 0); // timeout option
 	 if (rc < 0){
@@ -40,7 +106,10 @@ void rtsp_hls(char * url){
 	 if (avformat_open_input(&ctx, rtsp_url ,NULL, &dicts) != 0){ 
 		 return EXIT_FAILURE; 
 	 } 
+	 av_dict_free(&dicts);
 
+	 ctx->flags |= AVFMT_FLAG_NOBUFFER;
+	 av_format_inject_global_side_data(ctx);
 	 // get context
 	 if (avformat_find_stream_info(ctx, NULL) < 0)
 	 {
@@ -48,121 +117,133 @@ void rtsp_hls(char * url){
 	 } 
 
 	 //search video stream , audio stream
-	 for (int i = 0 ; i < ctx->nb_streams ; i++){ 
-		 if (ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO){ vidx = i; printf(" AVMEDIA_TYPE_VIDEO = %d  \n", i);}
-		 if (ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO){ aidx = i; printf(" AVMEDIA_TYPE_AUDIO = %d  \n", i);} 
-		 if (ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO || ctx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO){
-		 /* Open decoder */
-			int ret = avcodec_open2(ctx->streams[i]->codec,
-				avcodec_find_decoder(ctx->streams[i]->codec->codec_id), NULL);
+	 for (int i = 0; i < ctx->nb_streams; i++)
+    {
+        if (((ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) && (ctx->streams[i]->codecpar->codec_id == AV_CODEC_ID_H264))
+                || ((ctx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+                    && ((ctx->streams[i]->codecpar->codec_id == AV_CODEC_ID_AAC) || (ctx->streams[i]->codecpar->codec_id == AV_CODEC_ID_AAC_LATM))))
+        {
+            AVStream* in_stream = ctx->streams[i];
+            AVStream* out_stream = avformat_new_stream(oc, NULL);
+            if (!out_stream)
+            {
+                avformat_close_input(&ctx);
+                avformat_free_context(oc);
+                oc = NULL;
+              
+                return ;
+            }
+            if (in_stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+            {
+                in_audio_index = in_stream->index;
+                out_audio_index = out_stream->index;
+            }
+            if (in_stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+            {
+                in_video_index = in_stream->index;
+                out_video_index = out_stream->index;
+            }
+            AVCodec* in_codec = avcodec_find_encoder(in_stream->codecpar->codec_id);
+            AVCodecContext *codec_ctx = avcodec_alloc_context3(in_codec);
+            codec_ctx->framerate = (AVRational){0,1};
+            ret = avcodec_parameters_to_context(codec_ctx, in_stream->codecpar);
+            if (ret < 0)
+            {
+                avformat_close_input(&ctx);
+                avformat_free_context(oc);
+                oc = NULL;
+                return ;
+            }
 
-			av_log(NULL, AV_LOG_ERROR, "open decoder for stream #%u\n", i);
-			if (ret < 0) {
-				av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
-				return ret;
-			}
-		  }
-	}
-	av_dump_format(ctx, 0,  rtsp_url, 0);
+            codec_ctx->codec_tag = 0;
+            if (oc->oformat->flags & AVFMT_GLOBALHEADER)
+                codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+            ret = avcodec_parameters_from_context(out_stream->codecpar, codec_ctx);
+            if (ret < 0)
+            {
+                avformat_close_input(&ctx);
+                avformat_free_context(oc);
+                oc = NULL;
+               
+                return ;
+            }
+            out_stream->time_base = in_stream->time_base;
+            avcodec_free_context(&codec_ctx);
+        }
+    }
+
 	
 		 //open output file 
 		 if (oc == NULL){
 			return EXIT_FAILURE;
 		 }
+	 
 
-		 AVStream* vstream = NULL; 
-		 AVStream* astream = NULL;
-
-		 vstream = avformat_new_stream(oc, ctx->streams[vidx]->codec->codec); 
-		 astream = avformat_new_stream(oc, ctx->streams[aidx]->codec->codec);
-
-		 avcodec_copy_context(vstream->codec, ctx->streams[vidx]->codec); 
-		 vstream->sample_aspect_ratio = ctx->streams[vidx]->codec->sample_aspect_ratio; 
-
-		 avcodec_copy_context(astream->codec, ctx->streams[aidx]->codec); 
-
-		 int cnt = 0; 
-
-		// av_read_play(ctx); //play RTSP 
-
-		 int ii = (1 << 4); // omit endlist
-		 int jj = (1 << 1); // delete segment. 
-		 // libavformat/hlsenc.c 's description shows that no longer available files will be deleted but it doesnt works as described.
-
-		 av_opt_set(oc->priv_data, "hls_segment_filename", "file%04d.ts", AV_OPT_SEARCH_CHILDREN);
-		 av_opt_set_int(oc->priv_data, "hls_list_size", 5, AV_OPT_SEARCH_CHILDREN);
-		 av_opt_set_int(oc->priv_data, "hls_time", 2, AV_OPT_SEARCH_CHILDREN);
-		 av_opt_set_int(oc->priv_data, "hls_flags", ii|jj, AV_OPT_SEARCH_CHILDREN);
-		 
-		 av_opt_set_int(oc->priv_data, "hls_enc",1, 0);
-
-		 
-		 av_opt_set(oc->priv_data, "hls_base_url", "http://192.168.0.34:8080/", 0);
-		 
-		 av_opt_set(oc->priv_data, "hls_enc_key_url", "http://192.168.0.34:8080/key.htm", AV_OPT_SEARCH_CHILDREN);
-		 av_opt_set(oc->priv_data, "hls_enc_key", "1234567890123456", 0);
-		 av_opt_set(oc->priv_data, "hls_enc_iv", "1234567890123456", 0);
-
-		avformat_write_header(oc, NULL); 
+		AVDictionary *opts = NULL;
+		av_dict_set(&opts, "movflags",  "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+dash+frag_custom", 0);
+		av_dict_set(&opts, "frag_duration", "0", 0);
+		av_dict_set(&opts, "min_frag_duration", "0", 0);
 		
-	
-		int ret;
-		int got_frame=0;
-		enum AVMediaType type;
-		AVFrame *frame = av_frame_alloc();
-		static a_total_duration = 0;
-        
-		
+		av_dump_format(oc, 0, "", 1);
+		avformat_write_header(oc, &opts); 
+		oc->oformat->flags |= AVFMT_TS_NONSTRICT;
+
+		av_dict_free(&opts);
+
+		int read_error_num = 0;
+		int write_error_num = 0;
+		int FirstKeyFrame = 0;
+
+		AVPacket pkt; 
+
+		end1 = clock();
+		float res1 = (float)(end1 - start1)/CLOCKS_PER_SEC;
+
+
+		printf("[send] while Start %.3f \n",res1); 
 		while (1){
 			 
-				AVPacket packet; 
-				av_init_packet(&packet); 
-				int nRecvPacket = av_read_frame(ctx, &packet);
-				type = ctx->streams[packet.stream_index]->codec->codec_type;
-			
-				 
-				AVRational time_base = oc->streams[packet.stream_index]->time_base;
-				
-				if (type == AVMEDIA_TYPE_VIDEO){
-					 ret= avcodec_decode_video2(ctx->streams[packet.stream_index]->codec, frame,&got_frame, &packet);
-				}else{
-					 ret= avcodec_decode_audio4(ctx->streams[packet.stream_index]->codec, frame,&got_frame, &packet);
-				}
+				int out_index = -1;
+				av_init_packet(&pkt); 
+				pkt.data = NULL;
+				pkt.size = 0;
+				int nRecvPacket = av_read_frame(ctx, &pkt);
 
-				if (got_frame) {
-					frame->pts = frame->pkt_pts;
-					if (type != AVMEDIA_TYPE_VIDEO){
-							packet.dts=packet.pts  = a_total_duration;
-							a_total_duration += av_rescale_q(frame->nb_samples, oc->streams[packet.stream_index]->codec->time_base, oc->streams[packet.stream_index]->time_base);
-					}else{
-							//cnt++;
-							//packet.dts=packet.pts  = a_total_duration;
-							//packet.dts=packet.pts  = frame->pts;
-							//packet.dts=packet.pts;
+				if (pkt.stream_index == in_video_index)
+					out_index = out_video_index;
+				if (pkt.stream_index == in_audio_index)
+					out_index = out_audio_index;
+				if (out_index == -1)
+				{
+					av_packet_unref(&pkt);
+					continue;
+				}
+				if (FirstKeyFrame==0 && (pkt.stream_index == in_video_index))
+				{
+					if (pkt.flags & AV_PKT_FLAG_KEY)
+						FirstKeyFrame = 1;
+					else
+					{
+						av_packet_unref(&pkt);
+						continue;
 					}
-
-					 // generally, dts is same as pts. it only differ when the stream has b-frame
-					 ret = av_interleaved_write_frame(oc, &packet);  //av_write_frame(oc,&packet); 
-					 /*
-						file to memory
-						https://ko.programqa.com/question/59938265/
-					 */
-					 av_packet_unref(&packet); 
-				
-					 if (cnt > 30000) {
-						//break;
-					 }
 				}
-			 
+				AVStream* in_stream = ctx->streams[pkt.stream_index];
+				pkt.stream_index = out_index;
+				AVStream* out_stream = oc->streams[out_index];
+				pkt.flags |= AV_PKT_FLAG_KEY;
+				pkt.pos = -1;
+
+				ret = av_interleaved_write_frame(oc, &pkt);
+				av_packet_unref(&pkt);
+				if (vod_exit==1) {
+						break;
+				}
 			}
 
-		    av_frame_free(&frame);
-
-		    av_read_pause(ctx); 
-			av_write_trailer(oc); 
+		    av_write_trailer(oc); 
 			avformat_free_context(oc); 
-			av_dict_free(&dicts);
-
-			return (EXIT_SUCCESS); 
+			av_free(pb_Buf);
 		
 	}

@@ -4,7 +4,7 @@ LIB_PATH    = /root/ffmpeg_build/lib/libavformat.a /root/ffmpeg_build/lib/libavc
 INCLUDE_PATH    = -I/root/fmpeg_build/include
 SEARCH_LIB    = -L/root/ffmpeg_build/lib
 LIBAVFLAGS    = -lavformat -lavcodec -lavutil -lswresample -lpthread 
-SOURCEFILE    = src/rtsp_tran.c src/mini_web.c src/yoonagent.c
+SOURCEFILE    = src/KISA_SEED_CBC.c  src/KISA_SEED_CTR.c src/rtsp_tran.c src/mini_web.c src/yoonagent.c
 FLAGS    = -Wall -lm -lz
 make:
 	$(CC) $(LDFLAGS) $(INCLUDE_PATH) -o yoonagent $(LIB_PATH) $(SOURCEFILE) $(LIBAVFLAGS) $(FLAGS) $(SEARCH_LIB)
