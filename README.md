@@ -9,7 +9,7 @@
 
 ## 시스템 구성도 및 사용 도구
 <div width="100%" style="text-align:center;">
-  <img src="https://user-images.githubusercontent.com/46548273/83089432-44236200-a0d1-11ea-8710-839d11d9ec64.png">  
+  <img src="https://user-images.githubusercontent.com/65989403/89764627-b97acc80-db2f-11ea-92aa-ae9a709c50f1.png">  
 </ div >
 
 *&#35;VOD Server&#35;*<br>Windows IIS Server<br><br>
