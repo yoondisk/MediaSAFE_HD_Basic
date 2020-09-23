@@ -1,2 +1,7 @@
 # Ignore File
 *.bak
+*.a
+*.o
+*.so
+!assem_live.php
+!assem_vod.php
