@@ -147,7 +147,7 @@ int SEED_CBC_Encrypt( IN BYTE *pbszUserKey, IN BYTE *pbszIV, IN BYTE *pbszPlainT
 */
 int SEED_CBC_Decrypt( IN BYTE *pbszUserKey, IN BYTE *pbszIV, IN BYTE *pbszCipherText, IN int nCipherTextLen, OUT BYTE *pbszPlainText );
 
-char* seed_cbc_durl(char * urlstring,int len);
+void seed_cbc_durl(char * urlstring,int len,char *  reff);
 
 
 #ifdef  __cplusplus

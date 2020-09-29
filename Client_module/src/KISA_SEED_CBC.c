@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "KISA_SEED_CBC.h"
-#include "config.c"
+#include "config_cbc.c"
 // S-BOX
 const static DWORD SS0[256] = 
 {
@@ -619,6 +619,8 @@ int SEED_CBC_Decrypt( IN BYTE *pbszUserKey, IN BYTE *pbszIV, IN BYTE *pbszCipher
 		free(data);
 		free(cdata);
 		free(outbuf);
+		free(pbszPlainText);
+		free(newpbszCipherText);
 
 		return message_length;
 	}	
@@ -628,7 +630,7 @@ int SEED_CBC_Decrypt( IN BYTE *pbszUserKey, IN BYTE *pbszIV, IN BYTE *pbszCipher
 }
 
 
-char* seed_cbc_durl(char * urlstring,int len){
+void seed_cbc_durl(char * urlstring,int len,char *  reff){
 
 	int nUrlLen=len;
 	
@@ -668,30 +670,43 @@ char* seed_cbc_durl(char * urlstring,int len){
 
 	printf ("\n[SEED CBC] End\n");
 
-	i=0;loop=0;
-	int ii=0;
-	char timestamp[100];
+	printf ("\n[SEED SEED_CBC_Decrypt][%s]\n",(char *)pbszPlainText);
 
-	while(1){
-		if (loop>nPlainTextLen){ break;}
-	
-		urlstring[i++] = pbszPlainText[loop];
-		if ( pbszPlainText[loop]==0x7c){
-			i=0;
-			ed=1;
-		}else if (ed==0){
-			timestamp[ii]=pbszPlainText[loop];
+
+	int vv=0;
+	char timestamp[100]={0};
+	char reffer[2048]={0};
+
+	char *splitptr = strtok((char *)pbszPlainText, "|");  
+	while (splitptr != NULL){
+		if (vv==0){
+			// timestamp
+			strcpy(timestamp,splitptr);
 		}
-		ii++;
-		loop++;
-    }
+		if (vv==1){
+			// reffer
+			strcpy(reffer,splitptr);
+		}
+		if (vv==2){
+			// url
+			strcpy(urlstring,splitptr);
+			break;
+		}
+		splitptr = strtok(NULL, "|"); 
+		vv++;
+	}
+
+	printf("[seed timestamp][%s]===================\n",timestamp); 
+	printf("[seed reffer][%s]-org[%s]===================\n",reffer,reff); 
+	printf("[seed url][%s]===================\n",urlstring); 
+
+
 
 	long nowtimestamp=(unsigned long)time(NULL)-atol(timestamp);
 
 	printf ("\n[SEED timestamp]  %d - %d \n",nowtimestamp,expire_sec);
-	if (nowtimestamp>expire_sec){
-		memset(urlstring,0,sizeof(urlstring));
+	if (nowtimestamp>expire_sec || strlen(reffer)<1 || strstr(reff,reffer)==NULL ){
+		urlstring[0]=0;
+		printf ("\n[Error Null][%s]\n",urlstring);
 	}
-
-	return (char *)pbszPlainText;
 }

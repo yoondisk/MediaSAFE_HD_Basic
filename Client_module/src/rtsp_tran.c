@@ -181,7 +181,8 @@ void rtsp_hls(char * url,int websocket){
 	 
 
 		AVDictionary *opts = NULL;
-		av_dict_set(&opts, "movflags",  "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+dash+frag_custom", 0);
+		// "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+dash+frag_custom"
+		av_dict_set(&opts, "movflags",  "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+frag_custom", 0);
 		av_dict_set(&opts, "frag_duration", "0", 0);
 		av_dict_set(&opts, "min_frag_duration", "0", 0);
 		

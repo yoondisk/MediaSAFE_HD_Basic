@@ -26,7 +26,7 @@ extern "C" {
 
 #if __alpha__	||	__alpha	||	__i386__	||	i386	||	_M_I86	||	_M_IX86	||	\
 	__OS2__		||	sun386	||	__TURBOC__	||	vax		||	vms		||	VMS		||	__VMS || __linux__
-#define LITTLE_ENDIAN
+//#define LITTLE_ENDIAN
 #else
 #define BIG_ENDIAN
 #endif
