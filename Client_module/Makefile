@@ -4,11 +4,13 @@ LIB_PATH    = /root/ffmpeg_build/lib/libavformat.a /root/ffmpeg_build/lib/libavc
 INCLUDE_PATH    = -I/root/fmpeg_build/include
 SEARCH_LIB    = -L/root/ffmpeg_build/lib
 LIBAVFLAGS    = -lavformat -lavcodec -lavutil -lswresample -lpthread 
-SOURCEFILE    = src/KISA_SEED_CBC.c  src/KISA_SEED_CTR.c src/rtsp_tran.c src/mini_web.c src/yoonagent.c
-FLAGS    = -Wall -lm -lz
+SOURCEFILE    = src/KISA_SEED_CBC.c src/KISA_SEED_CTR.c src/rtsp_tran.c src/mini_web.c src/yoonagent.c
+FLAGS    = -Wall -lm -lz -lX11 -lxcb -lXau -lXdmcp
 make:
 	$(CC) $(LDFLAGS) $(INCLUDE_PATH) -o yoonagent $(LIB_PATH) $(SOURCEFILE) $(LIBAVFLAGS) $(FLAGS) $(SEARCH_LIB)
 	upx yoonagent
 clean:
 	rm -rf *.o rm -rf *.m3u8 rm -rf *.ts rm -rf *.log rm -rf *.gz rm -rf yoonagent 
+	killall yoonagent
+	
 
