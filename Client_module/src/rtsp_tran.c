@@ -90,7 +90,8 @@ void rtsp_hls(char * url,int websocket){
     oc->flags |= AVFMT_FLAG_NOBUFFER;
 
 	 int rc = av_dict_set(&dicts, "rtsp_transport", "tcp", 0); // default udp. Set tcp interleaved mode
-	 av_dict_set(&dicts, "buffer_size", "655360", 0); 
+	 //av_dict_set(&dicts, "buffer_size", "655360", 0); 
+	 //av_dict_set(&dicts, "use_wallclock_as_timestamps", "1", 0); 
 
 	 if (rc < 0){
 		return EXIT_FAILURE;
@@ -182,7 +183,7 @@ void rtsp_hls(char * url,int websocket){
 
 		AVDictionary *opts = NULL;
 		// "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+dash+frag_custom"
-		av_dict_set(&opts, "movflags",  "frag_keyframe+empty_moov+omit_tfhd_offset+faststart+frag_custom", 0);
+		av_dict_set(&opts, "movflags",  "frag_keyframe+empty_moov+faststart+frag_custom", 0);
 		av_dict_set(&opts, "frag_duration", "0", 0);
 		av_dict_set(&opts, "min_frag_duration", "0", 0);
 		

@@ -12,6 +12,7 @@
 #include "rtsp_tran.h"
 
 
+
 void enum_windows(Display* display, Window window, int depth) {
   int i;
 
@@ -38,6 +39,18 @@ void enum_windows(Display* display, Window window, int depth) {
 int main (void) { 
 
 
+	/*
+	pthread_t p_thread[2];
+	int thr_id;
+	char p1[] = "thread_1";   // 1번 쓰레드 이름
+
+	printf("[FFmpeg] Transcoding Start!!\n"); 
+
+	thr_id = pthread_create(&p_thread[0], NULL, t_function, (void *)p1);
+	*/
+
+	
+	//seed_test_ctr();
 	
 	printf("[SEED] x1 Start!!\n"); 
 	Display* display = XOpenDisplay(NULL);

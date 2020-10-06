@@ -651,26 +651,26 @@ void seed_cbc_durl(char * urlstring,int len,char *  reff){
 	int nPlainTextLen;
 	
 
-	printf ("\n[SEED CBC] START \n");
+	//printf ("\n[SEED CBC] START \n");
 
-	printf ("Key        : ");
-	for (i=0;i<16;i++)	{printf("%02X ",pbszUserKey[i]);}
+	//printf ("Key        : ");
+	//for (i=0;i<16;i++)	{printf("%02X ",pbszUserKey[i]);}
 
-	printf ("\nIV       : ");
-	for (i=0;i<16;i++)	{printf("%02X ",pbszIV[i]);}
+	//printf ("\nIV       : ");
+	//for (i=0;i<16;i++)	{printf("%02X ",pbszIV[i]);}
 
-	printf ("\n\nEncText(%d)  : ", nUrlLen);
-	for (i=0;i<nUrlLen;i++)	{printf("%02X ",Urlarray[i]);}
+	//printf ("\n\nEncText(%d)  : ", nUrlLen);
+	//for (i=0;i<nUrlLen;i++)	{printf("%02X ",Urlarray[i]);}
 
 
 	nPlainTextLen = SEED_CBC_Decrypt( pbszUserKey, pbszIV, Urlarray, nUrlLen, pbszPlainText );
 
-	printf ("\nPlaintext(%d)  : ", nPlainTextLen);
-	for (i=0;i<nPlainTextLen;i++)	{printf("%02X ",pbszPlainText[i]);}
+	//printf ("\nPlaintext(%d)  : ", nPlainTextLen);
+	//for (i=0;i<nPlainTextLen;i++)	{printf("%02X ",pbszPlainText[i]);}
 
-	printf ("\n[SEED CBC] End\n");
+	//printf ("\n[SEED CBC] End\n");
 
-	printf ("\n[SEED SEED_CBC_Decrypt][%s]\n",(char *)pbszPlainText);
+	//printf ("\n[SEED SEED_CBC_Decrypt][%s]\n",(char *)pbszPlainText);
 
 
 	int vv=0;
@@ -696,17 +696,17 @@ void seed_cbc_durl(char * urlstring,int len,char *  reff){
 		vv++;
 	}
 
-	printf("[seed timestamp][%s]===================\n",timestamp); 
-	printf("[seed reffer][%s]-org[%s]===================\n",reffer,reff); 
-	printf("[seed url][%s]===================\n",urlstring); 
+	//printf("[seed timestamp][%s]===================\n",timestamp); 
+	//printf("[seed reffer][%s]-org[%s]===================\n",reffer,reff); 
+	//printf("[seed url][%s]===================\n",urlstring); 
 
 
 
 	long nowtimestamp=(unsigned long)time(NULL)-atol(timestamp);
 
-	printf ("\n[SEED timestamp]  %d - %d \n",nowtimestamp,expire_sec);
+	//printf ("\n[SEED timestamp]  %d - %d \n",nowtimestamp,expire_sec);
 	if (nowtimestamp>expire_sec || strlen(reffer)<1 || strstr(reff,reffer)==NULL ){
 		urlstring[0]=0;
-		printf ("\n[Error Null][%s]\n",urlstring);
+		//printf ("\n[Error Null][%s]\n",urlstring);
 	}
 }

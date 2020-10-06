@@ -20,7 +20,7 @@
 #define MAX_PID   100 //pid 최대 수 정의
 #define HOME /index.html //home 정의
 
-
+#define VER 1000 // 버전정의
 
 char  key_byffers[100][1000]; //key buffers
 int key_cnt=0;
@@ -160,11 +160,122 @@ void err_key(int socket_id){
 	write(socket_id,hbuffer,strlen(hbuffer)); //버퍼의 내용을 fd에 써준다. 
 	close(socket_id);//socketfd를 닫는다. 
 }
+/*
+*/
+
+
+void jsonp(char* org_urls,char *des_key){
+
+	int splitptr_cnt=0;
+	static char hbuffer[BUFSIZE+1];//버퍼 선언  
+	strcpy(hbuffer,org_urls);
+
+	char *splitptr = strtok(hbuffer, "=");  
+	
+	while (splitptr != NULL){
+			if(strstr(splitptr,"jQuery")){ 
+				char *splitptr2 = strtok(splitptr, "&");  
+				while (splitptr2 != NULL){
+					strcpy(des_key,splitptr2);
+					break;
+				}
+				break;
+			}
+			splitptr_cnt++;
+			splitptr = strtok(NULL, "="); 
+	}
+
+}
+
+char *replaceAll(char *s, const char *olds, const char *news) {
+  char *result, *sr;
+  size_t i, count = 0;
+  size_t oldlen = strlen(olds); if (oldlen < 1) return s;
+  size_t newlen = strlen(news);
+
+
+  if (newlen != oldlen) {
+    for (i = 0; s[i] != '\0';) {
+      if (memcmp(&s[i], olds, oldlen) == 0) count++, i += oldlen;
+      else i++;
+    }
+  } else i = strlen(s);
+
+
+  result = (char *) malloc(i + 1 + count * (newlen - oldlen));
+  if (result == NULL) return NULL;
+
+
+  sr = result;
+  while (*s) {
+    if (memcmp(s, olds, oldlen) == 0) {
+      memcpy(sr, news, newlen);
+      sr += newlen;
+      s  += oldlen;
+    } else *sr++ = *s++;
+  }
+  *sr = '\0';
+
+  return result;
+}
+
+
+void file_dump(char *ffname,long seek,long lens,char *data ,int reset){
+	long fsize=lens;
+
+
+	if (reset==1){
+		long freal=0;
+
+		int32_t buf[256]; // Block size.
+		memset(buf, 0, 256);
+
+		char dump_filen[1000];
+		memset(dump_filen, 0, 1000);
+		sprintf(dump_filen,"/var/log/yoonagent/%s.mp4",ffname);
+
+		FILE* file = fopen(dump_filen, "wb");
+		int blocksToWrite = 1024*1024*10; // 1 GB
+
+		for (int i = 0; i < blocksToWrite; ++i){
+			 // fwrite(buf, 1, 100, file);
+			 // fseek(pFile, 9, SEEK_SET);
+			 // printf("%d - %d \n",fsize,freal);
+
+			 if (fsize>=freal+1024){
+				fwrite(buf, sizeof(int32_t), 256, file);
+			 }else{
+				int freal2=	fsize - freal;
+				printf("reset ==== %d - %d \n",fsize,freal2);
+				fwrite(buf, 1, freal2, file);
+			   break;
+			 }
+			  freal = freal + 1024;
+		}
+		fclose(file);
+	}else{
+		char dump_filen[1000];
+		memset(dump_filen, 0, 1000);
+		sprintf(dump_filen,"/var/log/yoonagent/%s.mp4",ffname);
+
+		FILE* file = fopen(dump_filen, "r+b");
+			fseek(file, seek, SEEK_SET);
+			fwrite(data, 1, lens, file);
+		fclose(file);
+	}
+}
 
 /*
 	web_run main
 */
 int web_run(){
+
+	struct stat st = {0};
+	if (stat("/var/log/yoonagent/" , &st) == -1) {
+		mkdir("/var/log/yoonagent/" , 0700);
+	}
+
+	
 
 	/* License Key init */
 	for (int kn=0;kn<100;kn++ ){
@@ -221,7 +332,7 @@ int web_run(){
 		}
 		length = sizeof(cli_addr);//cli_addr사이즈를 length에 저장한다. 
 
-		printf("\n\n[Socekt Start] =================== : %d  \n",hit); 
+		//printf("\n\n[Socekt Start] =================== : %d  \n",hit); 
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0){//연결요청 수락 
 			perror("error");//accept가 잘안되면 실행 
 			exit(1);//나간다. 
@@ -237,29 +348,42 @@ int web_run(){
 		
 		static char range_start[100]={0}; //range start array 선언   
 		static char range_end[100]={0}; //range start array 선언   
-		static char http_reffer[4096]={0}; //버퍼 선언   
+		static char http_reffer[4096]={0}; //버퍼 선언  
+		
+		char *jsonp_key[4096]; //버퍼 선언 
 
+		memset(range_start, 0, 100);
+		memset(range_end, 0, 100);
+
+		memset(jsonp_key, 0, 4096);
+		memset(buffer, 0, BUFSIZE);
+		memset(file_name, 0, BUFSIZE);
+		memset(http_reffer, 0, 4096);
 
 		ret =read(socketfd,buffer,BUFSIZE); //fd에서 계속 읽어옴  
-		printf("\n\n[info][start] Key Cnt: %d =================== \n\n",key_cnt); 
-				printf("%s\n",buffer); 
-		printf("[info][end] =================================\n\n");
+		//printf("\n\n[info][start] Key Cnt: %d =================== \n\n",key_cnt); 
+		//		printf("%s\n",buffer); 
+		//printf("[info][end] =================================\n\n");
 				
 		/*
 			range , reffer 
 		*/
-		printf("[Range][Start] =================================\n\n");
+		//printf("[Range][Start] =================================\n\n");
 		char *srange;
 		if(strstr(buffer,"Range: bytes")){ //Http Header Range
 			srange=strstr(buffer,"Range: bytes");
-			strcpy(range_start,srange+13);
-			strcpy(range_end,srange+13);
+			memcpy(range_start,srange+13,100);
+			memcpy(range_end,srange+13,100);
 			int end_line=0;
 			for(i=0;i<100;i++) { 
 				if(range_end[i] == '-') { //공백을 확인 
 					range_start[i] = 0;//공백일때 0 
-					strcpy(range_end,srange+14+i);
+					memcpy(range_end,srange+14+i,100);
 					end_line=i;
+					if (range_end[0]=='\r'){
+						range_end[0]=0;
+						break;
+					}
 				}
 				if(range_end[i] == '\r') { //공백을 확인 
 					if (end_line==1){
@@ -271,11 +395,11 @@ int web_run(){
 					break;
 				}
 			}
-			printf("[Header Range] %s-%s<=================== \n\n",range_start,range_end);
+			//printf("[Header Range] %s-%s<=================== \n\n",range_start,range_end);
 		}
-		printf("[Range][End] =================================\n\n");
+		//printf("[Range][End] =================================\n\n");
 		
-		printf("[REFERER][Start] =================================\n\n");
+		//printf("[REFERER][Start] =================================\n\n");
 		char *referer;
 		if(strstr(buffer,"Referer: ")){ //Http Header Referer
 			referer=strstr(buffer,"Referer: ");
@@ -287,7 +411,7 @@ int web_run(){
 				}
 			}	
 		}
-		printf("[REFERER][End] =================================\n\n");
+		//printf("[REFERER][End] =================================\n\n");
 		
 		if(ret == 0 || ret == -1) {//읽기 실패하면 
 			printf("[socketfd][ret][Err] =================================\n\n");
@@ -315,11 +439,14 @@ int web_run(){
 				}
 			}
 			strcpy(file_name,&buffer[5]);//buffer[5] 즉 파일 이름을 filename에 복사해준다. 
+			
+			jsonp(file_name,jsonp_key);
+
 			char *rfile_name = strtok(file_name, "?");    //첫번째 strtok 사용.
 
 			
-		printf("[param] %s\n",rfile_name); 
-		printf("[REFERER] %s\n",http_reffer); 
+		//printf("[param] %s\n",rfile_name); 
+		//printf("[REFERER] %s\n",http_reffer); 
 
 		/* .rtsp License Key Check */
 		if( strstr(rfile_name,".rtsp")  ){
@@ -359,32 +486,49 @@ int web_run(){
 			*/
 			if(pid[hit] == 0) {
 				close(listenfd);//listenfd를 닫아준다. 
+					
+					if(strstr(file_name,".info_mp4") && err_ret==0){ 
+							sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n%s({'ret':'%s','ver':'%d'})",jsonp_key,"0",VER);//200으로 헤더를 설정 
+							write(socketfd,buffer,strlen(buffer)); //버퍼의 내용을 fd에 써준다. 
+							//log(buff,file_name,9);//로그작성    
+							close(socketfd);//socketfd를 닫는다. 
+						//	printf("%s[info end] ===================   \n",buffer); 
+							exit(1);//나간다.
+					}
 					/*
 						http progressive download mp4 play start
 					*/
 					if(strstr(file_name,".mp4") && err_ret==0){ 
+
+						printf("[mp4 Start!!] \n"); 
+
+						char dump_file[BUFSIZE];
+						memset(dump_file, 0, BUFSIZE);
+						if (strlen(strstr(file_name,".mp4"))>5){
+								strncpy(dump_file,strstr(file_name,".mp4")+4,strlen(strstr(file_name,".mp4"))-4);
+								printf("[mp4 org]%s<===\n",dump_file); 
+						}
+
 						char mp4_enc_url[BUFSIZE];
 						char* mp464_url;
 						int ret_len=0;
 						memset(mp4_enc_url, 0, BUFSIZE);
 						
-						strncpy(mp4_enc_url, rfile_name, strlen(rfile_name)-4);
+						strncpy(mp4_enc_url, rfile_name, strlen(rfile_name)-strlen(strstr(file_name,".mp4")));
 
-						printf("[mp4 url]%s<===\n",mp4_enc_url); 
+						//printf("[mp4 url]%s<===\n",mp4_enc_url); 
 
 						mp464_url=__base64_decode(mp4_enc_url,strlen(mp4_enc_url)+1,&ret_len);
 						
 						seed_cbc_durl(mp464_url,ret_len,http_reffer);
 						if (strlen(mp464_url)<1){
-							printf("[mp4 url][%s] Null Error <===\n",mp464_url); 
-							err_key(socketfd);
-							exit(1);
+							//printf("[mp4 url][%s] Null Error <===\n",mp464_url); 
+							//err_key(socketfd);
+							//exit(1);
 						}
 							
-
-
 						strcpy(mp464_url,mp464_url+7);
-						printf("[mp4 url]%s<===\n",mp464_url); 
+						//printf("[mp4 url]%s<===\n",mp464_url); 
 
 						if (strlen(mp464_url)>0){
 
@@ -417,10 +561,10 @@ int web_run(){
 								}
 							}
 							if (strlen(host_port)<1){
-								strcpy(mp4_file,mp464_url+strlen(host_name));
+								strcpy(mp4_file,mp464_url+strlen(host_name)+0);
 							}else{
 								port=atoi(host_port);
-								strcpy(mp4_file,mp464_url+strlen(host_name)+strlen(host_port)+1);
+								strcpy(mp4_file,mp464_url+strlen(host_name)+strlen(host_port)+1+0);
 							}
 
 							struct hostent *host_entry;
@@ -429,11 +573,12 @@ int web_run(){
 								printf( "host to ip Error/n");
 								exit( 1);
 							}
-							printf("[mp4      host]%s<===\n",host_name); 
-							printf("[mp4 host   ip]%s<===\n",inet_ntoa( *(struct in_addr*)host_entry->h_addr_list[0]) ); 
-							printf("[mp4 host port]%d<===\n",port); 
-							printf("[mp4      file]%s<===\n",mp4_file); 
-
+							
+							//printf("[mp4      host]%s<===\n",host_name); 
+							//printf("[mp4 host   ip mp4exit]%s<===\n",inet_ntoa( *(struct in_addr*)host_entry->h_addr_list[0]) ); 
+							//printf("[mp4 host port]%d<===\n",port); 
+							//printf("[mp4      file]%s<===\n",mp4_file); 
+							
 							
 
 							struct sockaddr_in    server_addr;
@@ -441,7 +586,7 @@ int web_run(){
 							server_addr.sin_family = AF_INET;
 							server_addr.sin_port = htons(port);
 							server_addr.sin_addr.s_addr=  inet_addr( inet_ntoa( *(struct in_addr*)host_entry->h_addr_list[0]) );
-							printf("[mp4 Connect] Connect to %s: ", inet_ntoa(server_addr.sin_addr));
+							//printf("[mp4 Connect] Connect to %s: ", inet_ntoa(server_addr.sin_addr));
 
 							int mp4_socket;
 							mp4_socket = socket( AF_INET, SOCK_STREAM, 0);
@@ -457,7 +602,9 @@ int web_run(){
 							}
 
 							 
-							
+							if (strlen(range_start)<1){
+								strcpy(range_start,"0");
+							}
 							sprintf(buffer,
 								"GET %s HTTP/1.1\r\nHost: %s\r\nConnection: keep-alive\r\nAccept: */*\r\nUser-Agent: %s\r\nRange: bytes=%s-%s\r\n\r\n", 
 							mp4_file,
@@ -466,14 +613,16 @@ int web_run(){
 							range_start,
 							range_end	
 							);
-
-							printf("\n[mp4 host header]\n%s===================\n",buffer);
+							
+							
+							//printf("\n[mp4 host header]\n%s===================\n",buffer);
 
 							//mp4_server put	 
 							write(mp4_socket,buffer,strlen(buffer));
 							int rets=0;
-							long clens=0;
-							long rlens=0;
+							unsigned long long mp4lens=0;
+							unsigned long long clens=0;
+							unsigned long long rlens=0;
 							int dlen=0;
 
 							int ck_cnt=0;
@@ -483,14 +632,23 @@ int web_run(){
 							static char buffer_mp4_enc_two[MP4_BUFSIZE*2];//버퍼 선언   
 							int enc_len=0;
 							char  head_str[BUFSIZE]={0};
+							memset(buffer_mp4_enc_one, 0, MP4_BUFSIZE);
+							memset(buffer_mp4_enc_two, 0, MP4_BUFSIZE*2);
 							while(1){
+								
+							
+								memset(buffer_mp4, 0, MP4_BUFSIZE);
+								
+
 								int rdata_=0;
 
 								if (dlen==50){
 									//printf("[mp4 recv][]read start]==========================\n"); 
 								}
+								
 								ret =read(mp4_socket,buffer_mp4,MP4_BUFSIZE); //fd에서 계속 읽어옴  
 								if (ret<1){break;}
+								
 								
 								if (dlen==50){
 									//printf("[mp4 recv][]read end][%d] [%d]===================\n",ret,rets); 
@@ -502,83 +660,83 @@ int web_run(){
 								if (rets==0){
 									int head_eof=0;
 									int eof_ck=0;
-									while(1) { 
-										head_str[head_eof]=buffer_mp4[head_eof];
-										/*
-											0D => \r
-											0A => \n
-											\r\n\r\n
-										*/
-										if(buffer_mp4[head_eof] == 0x0A || buffer_mp4[head_eof] == 0x0D) {eof_ck++;}else{eof_ck=0;}
-										if (eof_ck==4){
-											/*
-											 HTTP HEAD == DATA SPLITE
-											*/
-											head_eof++;
+									char *x;
+									x=strstr(buffer_mp4,"\r\n\r\n");
+									int indx = x ? x - buffer_mp4 : -1;
+									strncpy(head_str,buffer_mp4,indx+4);
 
-											rdata_=head_eof;
-											ret=ret-head_eof;
+									/*
+										Send HTTP Header
+									*/
+									char *xmins = replaceAll(head_str, "Xdrm: 1\r\n", "Cache-control: no-cache\r\n");
+									strcpy(head_str,xmins);
 
-											/*
-												Data Copy
-												ret lens fix
-											*/
-											memcpy(buffer_mp4,buffer_mp4+rdata_,ret);
-											
-											/*
-												Send HTTP Header
-											*/
-											write(socketfd,head_str,head_eof);
+									xmins = replaceAll(head_str, "video/drm2\r\n", "video/mp4\r\n");
+									strcpy(head_str,xmins);
 
-											printf("[mp4 header]origin[%d][%d][%s]===================\n",ret,rdata_,head_str); 
-											
-											int splitptr_cnt=0;
-											char *splitptr = strtok(head_str, "\r\n");  
+									
 
-											while (splitptr != NULL){
-												printf("[mp4 header][%s]===================\n",splitptr); 
-												if (strstr(splitptr,"Content-Length: ")){
-													/*
-														Content-Length: XXXXXXXX
-													*/
-													strcpy(splitptr,splitptr+16);
-													clens=atol(splitptr)+head_eof;
-													break;
-												}
-												splitptr_cnt++;
-												splitptr = strtok(NULL, "\r\n"); 
-											}
-											break;
+
+
+									int splitptr_cnt=0;
+									char *splitptr = strtok(head_str, "\r\n");  
+
+									while (splitptr != NULL){
+
+										
+										if (!strstr(splitptr,"Last-Modified: ") && !strstr(splitptr,"ETag: ") &&  !strstr(splitptr,"Server: ") && !strstr(splitptr,"Connection: close") ){
+											write(socketfd,splitptr,strlen(splitptr));
+											write(socketfd,"\r\n",2);
 										}
-										head_eof++;
+										if (strstr(splitptr,"Content-Length: ")){
+												/*
+													Content-Length: XXXXXXXX
+												*/
+												char *pos = NULL;
+
+												strcpy(splitptr,splitptr+16);
+												mp4lens=clens=strtoll(splitptr,&pos, 10);
+												if ( atoi(range_start)==0  && strlen(dump_file)>0){
+														file_dump(dump_file,0,atol(splitptr),NULL ,1);
+												}
+										}
+											splitptr_cnt++;
+											splitptr = strtok(NULL, "\r\n"); 
 									}
-								}
+									
+									write(socketfd,"\r\n",2);
+
+
+									memset(head_str, 0, BUFSIZE);
+									memcpy(head_str,buffer_mp4+(indx+4),ret-(indx+4));
+									memcpy(buffer_mp4,head_str,ret-(indx+4));
+									ret=ret-(indx+4);
+
+									//printf("[mp4 Content-Length] --- [%d] ----  [%d]===================\n",ret , indx); 
+									//printf("[mp4 Content-Length] --- [%u] ----  [%u]===================\n",mp4lens , clens);
 								
 
-								
-
-							
-								if (dlen==50){
-									//printf("[mp4 recv][]write start][%d] [%d]===================\n",ret,rets); 
 								}
-								
-								
+								if (ret>0){
+
+
+								//printf("[mp4 [%d] [%u]=============================================================\n",ret,enc_len ); 
 								memcpy(buffer_mp4_enc_two+enc_len,buffer_mp4,ret);
 								enc_len=enc_len+ret;
-
 								
-								/*
-									KISA SEED CTR BLOCK Decrypt Start
-								*/
-								if (enc_len>=4096 || clens<=4096 ){
+								if (enc_len>=4096 || ( clens<=4096 &&  enc_len==clens && clens>0)){
 
 									int d_szie=4096;
+									
 									if (clens<=4096){d_szie=clens;}
 
 									memcpy(buffer_mp4,buffer_mp4_enc_two,d_szie);
-									
-									int Seed_Len = SEED_CTR_Decrypt( pbszUserKey_ctr, pbszCounter_ctr, (BYTE*)buffer_mp4, d_szie, (BYTE*)buffer_mp4_enc_one );
-									
+									memset(buffer_mp4_enc_one, 0, MP4_BUFSIZE);
+										//memcpy(buffer_mp4_enc_one, buffer_mp4_enc_two, d_szie);
+										int Seed_Len = SEED_CTR_Decrypt( pbszUserKey_ctr, pbszCounter_ctr, (BYTE*)buffer_mp4, MP4_BUFSIZE, (BYTE*)buffer_mp4_enc_one );
+
+								
+
 									fd_set readfds;
 									struct timeval tv;
 									FD_ZERO(&readfds);
@@ -589,29 +747,73 @@ int web_run(){
 									// 소켓 상태를 확인 한다. 
 									int state = select(socketfd+1, &readfds,(fd_set *)0, (fd_set *)0, &tv);
 									if (state==1){
-										printf("[mp4 recv][]write state][exit]===================\n"); 
+										//printf("[mp4exit 001 %s [%u] [%u]=============================================================\n",range_start,rlens,mp4lens ); 
 										break;
 									}
-									write(socketfd,buffer_mp4_enc_one,d_szie);
-									//write(socketfd,buffer_mp4,d_szie);
-									
+									if (mp4lens<1024*1024*5){
+										//usleep(1000*1);
+										//printf("[mp4exit ====================5m=============\n"); 
+									}
+									if ( strlen(dump_file)>0 ){
+									   file_dump(dump_file,atoi(range_start)+rlens, d_szie,buffer_mp4_enc_one ,0);
+									}
+							
+									int res=write(socketfd,buffer_mp4_enc_one,d_szie);
+									//file_dump(NULL,atoi(range_start)+rlens, d_szie,buffer_mp4 ,0);
+
+
 									clens=clens-d_szie;
 									rlens=rlens+d_szie;
 									enc_len=enc_len-d_szie;
-									memcpy(buffer_mp4_enc_two,buffer_mp4_enc_two+d_szie,enc_len);
 
-									if (clens<=4096){
-										d_szie=clens;
-										memcpy(buffer_mp4,buffer_mp4_enc_two,d_szie);
-										int Seed_Len = SEED_CTR_Decrypt( pbszUserKey_ctr, pbszCounter_ctr, (BYTE*)buffer_mp4, d_szie, (BYTE*)buffer_mp4_enc_one );
-										write(socketfd,buffer_mp4_enc_one,d_szie);
-										//write(socketfd,buffer_mp4,d_szie);
+									//printf("[mp4exit ==== %d ===== %s [%d] [%d]=============================================================\n",res,range_start,rlens,mp4lens ); 
+								
+
+									if (enc_len>0){
+										memmove(buffer_mp4_enc_two,buffer_mp4_enc_two+d_szie,enc_len);
+									}else{
+										//printf("[mp4exit enc_len = 0  ==== %d ===== %s [%d] [%d]=============================================================\n",res,range_start,rlens,mp4lens ); 
+									}
+								
+									if (enc_len<1 || clens < 4096*3){
+										//printf("[mp4exit +++ [Rstart:%s] [ret:%d] [enc_len:%d] [clens:%u] [rlens:%u] [mp4lens:%u]===========\n",range_start,ret,enc_len,clens,rlens,mp4lens ); 
+										
+									}
+									if (clens<1  ){
+										// printf("[mp4exit 002 %s [%u] [%u]=============================================================\n\n",range_start,rlens,mp4lens ); 
+										//printf("[mp4exit 002 %s [%u] [%u]=============================================================\n",range_start,rlens,mp4lens ); 
+										
 										break;
 									}
+									if (enc_len==clens  ){
+										/* niddle */
+										// printf("[mp4exit 003] %s - [%d] [%u] \n\n\n",range_start,enc_len,clens);
+										d_szie=clens;
+										memset(buffer_mp4, 0, MP4_BUFSIZE);
+										memcpy(buffer_mp4,buffer_mp4_enc_two,MP4_BUFSIZE);
+											
+											//memcpy(buffer_mp4_enc_one, buffer_mp4_enc_two, d_szie);
+											int Seed_Len = SEED_CTR_Decrypt( pbszUserKey_ctr, pbszCounter_ctr, (BYTE*)buffer_mp4, MP4_BUFSIZE, (BYTE*)buffer_mp4_enc_one );
+										// printf("=============================================================\n");
+										// for (i=0;i<d_szie+1;i++)	{printf("%02X ",buffer_mp4_enc_one[i]);}
+										// printf("=============================================================\n\n\n\n\n");
+
+										if ( strlen(dump_file)>0 ){
+										  file_dump(dump_file,atoi(range_start)+rlens, d_szie,buffer_mp4_enc_one ,0);
+										}
+
+										int res=write(socketfd,buffer_mp4_enc_one,d_szie);
+										break;
+									}
+									
+									
+
 								}
 								/*
 									KISA SEED CTR BLOCK Decrypt End
 								*/
+
+								}
 
 								
 								if (dlen==50){
@@ -622,14 +824,16 @@ int web_run(){
 								if (dlen==50){
 									dlen=0;
 								}
+								
 
 							}
+							//printf("[mp4 end]  %d - %d ===================   \n",rlens,clens); 
 							close(mp4_socket);
 
 						}
 						
 						close(socketfd);//socketfd를 닫는다. 
-						printf("[mp4 end] ===================   \n"); 
+						
 						exit(1);//나간다. 
 					}
 					/*
@@ -642,6 +846,7 @@ int web_run(){
 						rtsp live start
 					*/
 					if(strstr(file_name,".rtsp") && err_ret==0){ 
+						printf("[rtsp Start!!] \n"); 
 						sprintf(buffer,"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nConnection: keep-alive\r\nAccept-Ranges: bytes\r\n\r\n", "video/mp4");//200으로 헤더를 설정 
 						write(socketfd,buffer,strlen(buffer));//socekfd에 버퍼를 써준다.
 						char rtsp_enc_url[BUFSIZE];
@@ -654,14 +859,16 @@ int web_run(){
 						rtsp64_url=__base64_decode(rtsp_enc_url,strlen(rtsp_enc_url)+1,&ret_len);
 						
 						seed_cbc_durl(rtsp64_url,ret_len,http_reffer);
-						printf("[rtsp url] %s<===\n",rtsp64_url); 
+						//printf("[rtsp url] %s<===\n",rtsp64_url); 
 
 						if (strlen(rtsp64_url)>0){
+							//printf("[rtsp start] %s<===\n",rtsp64_url); 
 							rtsp_hls(rtsp64_url,socketfd);
+							//printf("[rtsp end] %s<===\n",rtsp64_url); 
 						}
 						
 						close(socketfd);//socketfd를 닫는다. 
-						printf("[rtsp end] ===================   \n",buffer); 
+						//printf("[rtsp end] ===================   \n",buffer); 
 						exit(1);//나간다. 
 					}
 					/*
@@ -683,7 +890,7 @@ int web_run(){
 			}
 		}
 		
-		printf("[Socket loop][%d]======================================\n",hit); 
+		//printf("[Socket loop][%d]======================================\n",hit); 
 	}
 	printf("[Socket End]  ====================================== \n\n\n"); 
 	return 0; // 0반환
