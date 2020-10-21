@@ -1,3 +1,8 @@
+//replaceAll prototype 선언
+String.prototype.replaceAll_ = function(org, dest) {
+    return this.split(org).join(dest);
+}
+
 function numFormat(variable) { variable = Number(variable).toString(); if(Number(variable) < 10 && variable.length == 1) variable = "0" + variable; return variable; }
 	
 function rpad(str, padLen, padStr) {
@@ -19,7 +24,9 @@ function log_(a){
 		let seconds = today.getSeconds();  // 초
 		let milliseconds = today.getMilliseconds(); // 밀리초
 		let stamp=numFormat(hours) + ':' + numFormat(minutes) + ':' + numFormat(seconds) + '.' + milliseconds;
-		$('#info').val($('#info').val()+"[VideoJs Event] "+rpad(a,10," ")+" ("+stamp+")\r\n");	
+		$('#info').val($('#info').val()+"[Video Event] "+rpad(a,10," ")+" ("+stamp+")\r\n");	
+		const top = $('#info').prop('scrollHeight'); 
+		$('#info').scrollTop(top);
 }
 
 var TimeFormat_str = function(totalsecond) {
@@ -64,7 +71,7 @@ var setMediaBookMarkStyle = function(objMediaBox, objMediaPlayer, strBookmarkNam
 		objMediaBox.find(".aBookMarkReSet_" + intThisIndex).remove();
 		$(objThis).parent().append(" <a href=\"javascript:void(0)\" class=\"aBookMarkReSet_" + intThisIndex + "\">[수정]</a>");
 		objMediaBox.find(".aBookMarkReSet_" + intThisIndex).click(function() {
-			intBookmarkValue = player.currentTime();  
+			intBookmarkValue = player.currentTime;  
 			setCookie_str(strBookmarkName + intThisIndex, intBookmarkValue, 365);
 			setMediaBookMarkStyle(objMediaBox, objMediaPlayer, strBookmarkName, objThis, intThisIndex, intBookmarkValue);
 		});
@@ -76,5 +83,5 @@ var setMediaBookMarkStyle = function(objMediaBox, objMediaPlayer, strBookmarkNam
 
 var exeMediaMoveBookMark = function(objMediaBox, objMediaPlayer, objThis) {
 		var intBookmarkValue = parseInt($.data(objThis,"BookmarkValue"));
-		player.currentTime(intBookmarkValue);
+		player.currentTime=intBookmarkValue;
 }
