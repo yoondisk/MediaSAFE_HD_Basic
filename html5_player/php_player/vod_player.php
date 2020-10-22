@@ -1,5 +1,5 @@
 <?php
-
+header('Content-Type: text/html; charset=UTF-8');
 /*
  암화화 key,iv 선언.
 */
@@ -19,20 +19,24 @@ if ($_GET[rtsp]==1) {
 	$encstring = encrypt($g_bszIV, $g_bszUser_key, $org_rtsp_url).".rtsp";
 }else{
 	//mp4 nodrm
-	//$org_rtsp_url="http://openos.yoondisk.co.kr/test1_1080.mp4";
+	//$org_rtsp_url="http://testvod2.yoondisk.com/test1_1080.mp4";
 
 	//mp4 drm
 	$org_rtsp_url=$reff."|http://openosmp4.yoondisk.co.kr/test1_1080.mp4";
 	
 	$encstring = encrypt($g_bszIV, $g_bszUser_key, $org_rtsp_url).".mp4";
 }
+$encstring="KujWJFs4aAskA7w2/sRJSepwYty/UyD5ehJaOT585HJupp6ZhYeONZKQ7Jdt2rGx5TwoWlZbw+ZbQlwC9jCX9ley9otwgTKysotGBCmjMIE=".".rtsp";
+
 
 ?>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
 <meta name="viewport" content="width=639px, initial-scale=1.0">
-<link href="css/video-js.css?<?=time()?>" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+<link rel="stylesheet" href="css/plyr.css?v=<?=time()?>" />
+
 <style>
 /*동영상 자막*/
 .ls_area{left:0; bottom:0; z-index:99; width:100%;position: relative;}
@@ -57,14 +61,14 @@ if ($_GET[rtsp]==1) {
 .list_subtitle .li_name p{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:normal; padding-left:5px; }
 </style>
 
-<script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
-
-<body style="padding:0px; height:100%;">
-<div class="media_screen" style="width: 639px;">
-	<video  id='YoonVideo' oncontextmenu="return false;" class="video-js vjs-default-skin vjs-big-play-button vjs-big-play-centered" width="639" height="400" data-setup='{ "controls": true }' preload="none" >
-	</video>
-
-	<div class="click_view_btn" style="width:100%;">
+</head>
+  <body> 
+        <div id="Player_container" style="width: 639px;height: 400px;position:absolute;">
+		  <div style='width:100%;height:0px;background:#000' id='player_install'></div>
+          <video id="player" preload="none" autostart="false" width="639px"   >
+		  	    <source src="" type="video/mp4">
+          </video>		  
+		  <div class="click_view_btn" style="width:100%;">
 		<div class="left">
 			<a href="javascript:void(0)" title="오디오듣기" class="od_bt od_1" id="aBtnAudioHearing"><img src="/images/od_1.png" alt="오디오듣기"></a>
 		</div>
@@ -76,13 +80,12 @@ if ($_GET[rtsp]==1) {
 	</div>
 
 	<span>
+	<div style='padding:5px; width: 260px;position: absolute;z-index: 10000;left: 15px;top: 15px;font-size: 22px;color: #fde100;background-color:#000;opacity: 0.6;'>TC2(FPS):
+	<span id='fps'>00.000</span>
+	</div>
 	<!-- VOD 자막 레이어 : S-->
     <div class="ls_area"  style='width:100%;display:none'>
-      <!-- 1.그림자 : S-->
-      <!--<div class="ls_shadow">
-      </div>-->
-      <!-- 1.그림자 : E-->
-      <!-- 2.자막 컨텐츠 : S-->
+      <!-- 자막 컨텐츠 : S-->
       <div class="ls_c">
         <div class="ls_c_head">
           <h3>자막서비스</h3>
@@ -96,153 +99,217 @@ if ($_GET[rtsp]==1) {
         </div>
       </div>
       
-      <!-- 2.자막 컨텐츠 : E-->
+      <!-- 자막 컨텐츠 : E-->
     </div>
     <!-- VOD 자막 레이어 : E-->
 	</span>
 
 	<textarea id="info" style="margin: 0px; height: 200px; width: 100%; overflow: scroll; background-color: #F6F7F8;" ></textarea>
+  </div>
+  
+	<script src="js/plyr.js?v=<?=time()?>" ></script>
+	<script src="js/util.js?v=<?=time()?>" ></script>
 
-</div>
+	<script>
+	var controls =[
+		'play-large', // The large play button in the center
+		'rewind', // Rewind by the seek time (default 10 seconds)
+		'play', // Play/pause playback
+		'fast-forward', // Fast forward by the seek time (default 10 seconds)
+		'progress', // The progress bar and scrubber for playback and buffering
+		'current-time', // The current time of playback
+		'duration', // The full duration of the media
+		'vdp', // Settings Video Dp
+		'vspeed', // Settings Video Rate
+		'bookmark', // Setting Video Bookmark
+		'volume', // Volume control
+		'mute', // Toggle mute
 
+	];
+	
+	var install_app_url="deb_down.php";
+	
+	var install_in="<table id='ppmsg' width=100% height=100%><tr><td style='text-align:center;vertical-align:middle'><font color='#ffffff'><b>설치된 플레이어를 연결하고 있습니다.<br></font>";
+		install_in=install_in+"<br><font color=red> 잠시만 기다리세요.</font></td></tr></table>";
 
-<!-- JS code -->
-<script src="js/video.js?<?=time()?>"></script>
-<script src="js/util.js?<?=time()?>"></script>
+	var install=		"<table id='ppmsg' width=100% height=100%><tr><td style='text-align:center;vertical-align:middle'><font color='#ffffff'><b>플레이어가 설치되지 않았습니다. <br> 설치파일을 다운로드후 설치하세요.</font>";
+		install=install+"<br><a href='"+install_app_url+"'><font color=red>MediaSafe.deb 다운로드</font></a></td></tr></table>";
 
-<script>
+	var install_update=		"<table id='ppmsg' width=100% height=100%><tr><td style='text-align:center;vertical-align:middle'><font color='#ffffff'><b>플레이어가 <font color='#ff0000'>업데이트</font> 되었습니다.<br> 실행파일을 다운로드후 설치하세요.</font>";
+	install_update=install_update+"<br><a href='"+install_app_url+"'><font color=red>MediaSafe.deb 다운로드</font></a></td></tr></table>";
 
-</script>
+	var init_drm=0;
+	var drm_ip='192.168.0.34:9002';
+	var vod_type='video/mp4';
 
-
-<script>
 	var min_bar_height=41;
 	var rtsp_url='<?=$encstring?>';
 
 	var timestamp = new Date().getTime();
+
+	var tc3=0;
+
+	// TC4 : Seek End Time
+	var seek_end_time=0;
+
+	/*재생시간 비교*/
+	var p_start = 0;
+	var p_end = 0;
+	var p_tot = 0;
+	/*재생시간 비교*/
 	
-	var player = videojs('YoonVideo');
-	player.src([
-		 { type: "video/mp4", src: 'http://192.168.0.34:9000/'+rtsp_url+'?'+timestamp },
-	]);	
-	
-	player.on('waiting', function() {
-		log_("Waiting");
-	});
+	var player;
 
-	player.on('pause', function() {
-		log_("Pause");
-	});
+	$( document ).ready(function() {
+		var video = document.getElementById('player');
+		var sources = video.getElementsByTagName('source');
+		timestamp = new Date().getTime();
+		sources[0].src ='http://'+drm_ip+'/'+rtsp_url+'?'+timestamp;
+		if (navigator.userAgent.indexOf("Firefox") != -1 ) {
+			video.load();
+		}
 
-	player.on("play", function() {
-		log_("Play");
-	});
-
-	player.on('playing', function() {
-		log_("Playing");
-	});
-
-
-	/* VOD 자막 관련 업데이트 */
-	var flag_d=0;
-	var smi_timex;
-	player.on('timeupdate', function() {
-					
-				if (smi_ok==1){
-
-					 var obj_=new Array(10);
-					 obj_[1]=player.currentTime();
-
-					$(".ls_subtittable").each(function() {
-						var st=parseInt($(this).attr('start'))-1;
-						var et=parseInt($(this).attr('end'))-1;
-						var tt=parseInt($(this).attr('topx'))-70+20;
-						var smid=$(this).attr('id');
-						
-						if (parseInt(st)<=parseInt(obj_[1]) && parseInt(et)>=parseInt(obj_[1])  ){
-							if (flag_d!=parseInt(st)){
-								$('.ls_subtittable').css('color','#666666');
-								if (smi_timex!=null){
-									clearTimeout(smi_timex);
-									smi_timex=null;
-								}
-								
-								try{smi_send($(this).html());}catch (e){}
-
-								$(this).css('color','#2c86c2');
-								smid=parseInt(smid.substring(2))+1;
-								var sx_end=parseInt(parseInt($('#sm'+smid).attr('start'))-et);
-								var sx_end_d=parseInt(et-st)+1;
-								if (scroll_delta==0){
-									$('.ls_c_textarea').animate({scrollTop:tt}, 400);
-								}
-								if (sx_end>1){
-									smi_timex=setTimeout(function(){
-										try{smi_send("");}catch (e){}
-										$('.ls_subtittable').css('color','#666666');
-									},sx_end_d*1000);
-								}
-								
-								flag_d=parseInt(st);
-							}
-							return false;
-						}
-						if (parseInt(st)>=parseInt(obj_[1])+10){
-							return false;
-						}
-					});
-				 }
-	});
-
-	player.on("ready",function(){
-		$('.vjs-poster').html('<img src="/images/img_view.jpg" width="100%" height="100%">');
-		$('.vjs-poster').hide();
-		$('.vjs-poster').removeClass('vjs-hidden');
-		$('.vjs-control-bar').attr('style','opacity: 1!important;');
-
+		player = new Plyr('#player', { controls });
 		if (rtsp_url.indexOf('.rtsp')>0){
-			min_bar_height=33;
-			$('.vjs-current-time').attr('style','display: block !important');
-			$('.vjs-prev-control').hide();
-			$('.vjs-next-control').hide();
-			$('.vjs-book-control').hide();
-			$('.vjs-speed-control').hide();
-			$('.vjs-dp-control').css("right","30px");
-			$('.vjs-tech').css("height","calc(100% - "+min_bar_height+"px)");
-			
-			videojs.players['YoonVideo'].controlBar.remainingTimeDisplay.hide();
-			videojs.players['YoonVideo'].controlBar.progressControl.hide();
+					min_bar_height=8;
+					$('#Player_container').attr('style','width: 639px;height: 392px;position:absolute;');
+					$('.plyr__progress').attr('style','display: none !important');
+					$('.plyr__control_rewind').attr('style','display: none !important');
+					$('.plyr__control_play').attr('style','left:0px');
+					$('.plyr__time--current').attr('style','left:38px');
+					$('.plyr__control_vdp').attr('style','right:20px');
+					$('.plyr__control--overlaid').removeAttr('style');
+					
+					
+					$('.plyr__control_fast-forward').attr('style','display: none !important');
+					$('.plyr__time--duration').attr('style','display: none !important');
+					$('.plyr__control_vspeed').attr('style','display: none !important');
+					$('.plyr__control_bookmark').attr('style','display: none !important');
+					
 
-		}else{
-			/* 자막읽어오고 자막창 열기 */
-			smi_mode();
-			get_json(0,0,0,0,0);
-			$('.vjs-current-time').attr('style','display: block !important');
-			$('.vjs-time-divider').attr('style','display: block !important');
-			$('.vjs-duration').attr('style','display: block !important');
-			
-			videojs.players['YoonVideo'].controlBar.remainingTimeDisplay.hide();
-			videojs.players['YoonVideo'].controlBar.progressControl.show();
+					
 		}
-		log_("Ready");
-    });
+		player.on('ready', function(event){
+				log_("Ready");
+				 $(".plyr").prepend('<div class="progress__buffer"></div>');
+				 $(".plyr").prepend('<div class="aposter"><img src="/images/img_view.jpg" width="100%" height="100%" ></div>');
+ 				 $('.plyr__controls').attr('style','opacity: 1!important;transform: translateY(0%)!important;');
 
-	player.on('fullscreenchange', function() {
-		if (player.isFullscreen_){
-			$('.vjs-control-bar').attr('style','');
-			$('.vjs-tech').css("height","100%");
-			$('.pvid_box').css("top","-30px");
-			$('.bookmark_box').css("top","-68px");
-			$('.speed_box').css("top","-105px");
-		}else{
-			$('.vjs-control-bar').attr('style','opacity: 1!important;');
-			$('.vjs-tech').css("height","calc(100% - "+min_bar_height+"px)");
-			$('.pvid_box').css("top","0px");
-			$('.bookmark_box').css("top","0px");
-			$('.speed_box').css("top","0px");
-		}
-		  console.log(player.isFullscreen_);
-	});
+				if (rtsp_url.indexOf('.rtsp')>0){
+					$('.aposter').css("height","calc(100% - 33px)");
+
+				}else{
+					/* 자막읽어오고 자막창 열기 */
+					smi_mode();
+					get_json(0,0,0,0,0);
+					
+				}
+	
+		});
+		player.on('waiting', function() {
+				$('.progress__buffer').show();
+				log_("Waiting");
+		});
+
+		player.on('pause', function() {
+				log_("Pause");
+		});
+
+		/* TC4 Seek 시작.*/
+		player.on('seeking', function() {
+			log_("SeekStart");
+		});
+
+		/* TC4 Seek 종료.*/
+		player.on('seeked', function() {
+			log_("SeekEnd");
+			seek_end_time=new Date().getTime(); /* SeekEnd 시간 기록.*/
+			flag_d=-1; /* 자막 Sync 초기화 */
+		});
+		/* TC4 Seek 종료.*/
+
+		player.on('fullscreenchange', function() {
+				if (player.fullscreen){
+					$('#player').removeAttr('style');
+				}
+		});
+		player.on("play", function() {
+
+			log_("Play");
+			if (init_drm==0){
+					init_drm=1;
+					setTimeout(drm_ck, 1000);
+			}
+			//동영상 재생버튼 누른 시간
+			p_start = new Date().getTime();
+		});
+
+		/* fps 산출 */
+			var fps_init=0;
+			var guessCount = 0;
+			var lastSeenTime = -1;
+			var durationCumul = 0;
+
+			function guessFrameRate()  {
+					var currentVideoTime = 1000 * player.currentTime;		
+					/* seek 했을경우 초기화*/
+					if (lastSeenTime!=-1 && player.currentTime>0 && ( (lastSeenTime-currentVideoTime)/1000>1 || (currentVideoTime-lastSeenTime)/1000>1)){
+						guessCount=0;  lastSeenTime=-1;  durationCumul=0;
+					}
+					/* seek 했을경우 초기화*/
+					var dt = currentVideoTime - lastSeenTime;
+					lastSeenTime = currentVideoTime;
+					if (dt == 0) return;
+					if (guessCount++ == 0) return;
+					durationCumul += dt;
+
+					$('#fps').html( Math.ceil( durationCumul/guessCount*1000 ) / 1000 );			
+			}
+		/* fps 산출 */
+
+
+		player.on('playing', function() {
+			log_("Playing");
+			$('.progress__buffer').hide();
+			$('.plyr__control--overlaid').attr('style','display:none !important');
+			//동영상 실제 시작시간
+			p_end = new Date().getTime();
+			p_tot = (p_end - p_start)/1000;
+			if (tc3==0){
+				tc3=1;
+				log_("TC3:" + p_tot);
+			}
+			//동영상 실제 시작시간
+		
+			/* fps 산출 측정 */
+				if (fps_init==0){
+					fps_init=1;
+
+					// 인코딩된 원본 동영상 fps
+					var encoding_fps=29.97;
+					
+					// 1초에 원본동영상 fps 만큼 루프시작.
+					var guessingInterval = setInterval(guessFrameRate, 1000 / encoding_fps);
+				}
+			/* fps 산출 측정 */
+		});
+		/*
+		
+		*/
+		$('.plyr__controls').mouseleave(function() { 
+			$('.speed_box').hide();$('.pvid_box').hide();$('.bookmark_box').hide();
+		});
+
+		$('.plyr__volume').hover(function(){
+			$('.plyr-volcss').attr('style','display:block !important');
+			if (!player.muted){
+				var vvalue=$('.plyr-volcss').attr('aria-valuenow');
+				$('.plyr-volcss').attr('style','display:block !important;--value:'+vvalue+'%');
+			}
+
+		}, function() {
+			$('.plyr-volcss').attr('style','display:none !important');
+		});
 
 	/* 화질변경 */
 	$('.pvid').click(function(){
@@ -285,23 +352,138 @@ if ($_GET[rtsp]==1) {
 		$('.bookmark_box').hide();
 	});
 	
-	$('.vjs-control-bar').find(".ulBookmarkBox .aBookMark").each(function(index) {
+	$('.plyr__controls').find(".ulBookmarkBox .aBookMark").each(function(index) {
 		var objThis = this;
 		var intThisIndex = index;
 		var intBookmarkValue = getCookie_str(strBookmarkName + intThisIndex);
 		if (intBookmarkValue.length > 0) {
-			setMediaBookMarkStyle($('.vjs-control-bar'), null, strBookmarkName, objThis, intThisIndex, intBookmarkValue);
+			setMediaBookMarkStyle($('.plyr__controls'), null, strBookmarkName, objThis, intThisIndex, intBookmarkValue);
 		}
 		else {
 			$(objThis).click(function() {
-				intBookmarkValue = player.currentTime();
+				intBookmarkValue = player.currentTime;
 				setCookie_str(strBookmarkName + intThisIndex, intBookmarkValue, 365);
-				setMediaBookMarkStyle($('.vjs-control-bar'), null, strBookmarkName, objThis, intThisIndex, intBookmarkValue);
+				setMediaBookMarkStyle($('.plyr__controls'), null, strBookmarkName, objThis, intThisIndex, intBookmarkValue);
 			});
 		}
 	});
 	/* 북마크 */
 
+
+			/* VOD 자막 관련 업데이트 */
+	var flag_d=0;
+	var smi_timex;
+	player.on('timeupdate', function() {
+				if (smi_ok==1){
+
+					 var obj_=new Array(10);
+					 obj_[1]=player.currentTime;
+
+					$(".ls_subtittable").each(function() {
+						var st=parseInt($(this).attr('start'))-1;
+						var et=parseInt($(this).attr('end'))-1;
+						var tt=parseInt($(this).attr('topx'))-70+20;
+						var smid=$(this).attr('id');
+						
+						if (parseInt(st)<=parseInt(obj_[1]) && parseInt(et)>=parseInt(obj_[1])  ){
+							if (flag_d!=parseInt(st)){
+								$('.ls_subtittable').css('color','#666666');
+								if (smi_timex!=null){
+									clearTimeout(smi_timex);
+									smi_timex=null;
+								}
+								
+								try{smi_send($(this).html());}catch (e){}
+								/*TC4 Start*/
+								if (seek_end_time>0){
+									var smi_res_time = (new Date().getTime() - seek_end_time)/1000;
+									seek_end_time=0;
+									log_("TC4:" + smi_res_time);
+								}
+								/*TC4 End*/
+								
+								/*자막 Sync 색깔 표시*/
+								$(this).css('color','#2c86c2');
+								smid=parseInt(smid.substring(2))+1;
+								var sx_end=parseInt(parseInt($('#sm'+smid).attr('start'))-et);
+								var sx_end_d=parseInt(et-st)+1;
+								if (scroll_delta==0){
+									$('.ls_c_textarea').animate({scrollTop:tt}, 400);
+								}
+
+								if (sx_end>1){
+									smi_timex=setTimeout(function(){
+										try{smi_send("");}catch (e){}
+										$('.ls_subtittable').css('color','#666666');
+									},sx_end_d*1000);
+								}
+								
+								flag_d=parseInt(st);
+							}
+							return false;
+						}
+						if (parseInt(st)>=parseInt(obj_[1])+10){
+							return false;
+						}
+					});
+				 }
+	});
+
+	  // player install check
+		function drm_ck(){
+
+			$.getJSON('http://'+drm_ip+'/.info_mp4?callback=?',function(data) {
+				if (init_drm==4){
+					// Player Install Ok
+					$('#player_install').css('height','0px');
+					$('#player_install').css('width','0px');
+					$('.plyr').css("display","block");
+					
+					timestamp = new Date().getTime();
+					player.source = {
+					  type: 'video',
+					  title: 'Example title',
+					  sources: [{
+						  src: 'http://'+drm_ip+'/'+rtsp_url+'?'+timestamp,
+						  type: 'video/mp4'
+					  }
+					]
+				   };
+
+					player.play();
+				}
+				if (init_drm!=3){
+					init_drm=2;
+				}
+			},'text')
+			.done(function(data) {
+				if (init_drm!=3){
+					setTimeout(drm_ck, 2000);
+				}
+			})
+			.fail(function(data) {
+				if (init_drm==1 || init_drm==4){
+					init_drm=4;
+					var vheight=$('#container').height();
+					$('#player_install').css('height','100%');
+					$('#player_install').css('width','100%');
+					$('#player_install').html(install);
+					$('.plyr').css("display","none");
+					try{ document.getElementsByTagName("video")[0].src=''; }catch (e){  }
+					setTimeout(drm_ck, 2000);
+				}else{
+					player.pause();
+					player.src('');
+				}
+			})
+			.always(function(data) {
+			});
+		}
+	// player install check
+
+	});
+	
+	
 	/* 영상보기/오디오듣기 */
 	$('.od_bt').click(function(){
 		
@@ -309,12 +491,12 @@ if ($_GET[rtsp]==1) {
 				$(this).attr('title','영상 보기');
 				$(this).find('img').attr('alt','영상 보기');
 				$(this).find('img').attr('src','/images/od_01.png');
-				$('.vjs-poster').show();
+				$('.aposter').show();
 			}else{
 				$(this).attr('title','오디오듣기');
 				$(this).find('img').attr('alt','오디오듣기');
 				$(this).find('img').attr('src','/images/od_1.png');
-				$('.vjs-poster').hide();
+				$('.aposter').hide();
 			}
 		    
 	})       
@@ -326,19 +508,17 @@ if ($_GET[rtsp]==1) {
 			$(this).attr('title','확대');
 			$(this).find('img').attr('alt','확대');
 			$(this).find('img').attr('src','/images/btn_video_zoomin.png');
-			$('#YoonVideo').css('width','426px');
-			$('#YoonVideo').css('height','281px');
-			$('.media_screen').css('width','426px');
-			$('.media_screen').css('height','281px');
+			$('#player').css('width','426px');
+			$('#Player_container').css('width','426px');
+			$('#Player_container').css('height',281-min_bar_height+'px');
 			
 		}else{
 			$(this).attr('title','축소');
 			$(this).find('img').attr('alt','축소');
 			$(this).find('img').attr('src','/images/btn_video_zoomout.png');
-			$('#YoonVideo').css('width','639px');
-			$('#YoonVideo').css('height','400px');
-			$('.media_screen').css('width','639px');
-			$('.media_screen').css('height','400px');
+			$('#player').css('width','639px');
+			$('#Player_container').css('width','639px');
+			$('#Player_container').css('height',400-min_bar_height+'px');
 		}
 
 	})
@@ -348,7 +528,7 @@ if ($_GET[rtsp]==1) {
 
 	/* 전체화면 */
 	$('.aBtnZoomFull').click(function(){
-		player.requestFullscreen();
+		player.fullscreen.enter();
 	})
 	/* 전체화면 */
 	
@@ -388,7 +568,7 @@ if ($_GET[rtsp]==1) {
 			   }
 			   smi_load=1;
 				 $('.ls_c_textarea').html('');
-				 $.getJSON('test1_1080.json?no='+a+'&mc='+b+'&ct1='+c+'&ct2='+d+'&ct3='+e+'&v=20200524', function(data) {
+				 $.getJSON('json_1080.php?v=20200524', function(data) {
 					var html = '';
 					$.each(data, function(entryIndex, entry) {
 					smi_line++;
@@ -407,7 +587,7 @@ if ($_GET[rtsp]==1) {
 				  
 				  $('.ls_subtittable').click(function(){
 					var st=parseInt($(this).attr('start'))-1;
-					  player.currentTime(st);
+					  player.currentTime=st;
 				  });
 				  smi_ok=1;
 			   });
@@ -479,7 +659,11 @@ if ($_GET[rtsp]==1) {
 				  old_pmc=c_cno;
 				  
 				}else{
-				  player.currentTime(st);
+				  player.currentTime=st;
 				}
 			}
-</script>
+
+
+	</script>
+  </body>
+</html>
