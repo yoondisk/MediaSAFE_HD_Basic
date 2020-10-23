@@ -52,3 +52,4 @@ MediaSAFE_HD_Basic is <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/bl
 
 ## 참여방법
 <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/CONTRIBUTING.md">CONTRIBUTING.md</a>
+.
