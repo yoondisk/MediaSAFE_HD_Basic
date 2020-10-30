@@ -27,7 +27,7 @@ if (request.getParameter("rtsp")!=null && Integer.parseInt(request.getParameter(
 	encstring = encrypt(bszIV,bszUser_key, org_rtsp_url)+".rtsp";
 }else{
 	//mp4 nodrm
-	//org_rtsp_url="http://openos.yoondisk.co.kr/test1_1080.mp4";
+	//org_rtsp_url="http://testvod2.yoondisk.com/test1_1080.mp4";
 
 	//mp4 drm
 	org_rtsp_url=reff+"|http://openosmp4.yoondisk.co.kr/test1_1080.mp4";
