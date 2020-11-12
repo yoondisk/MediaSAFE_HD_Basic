@@ -6,7 +6,7 @@
 ![Build Status](https://img.shields.io/github/last-commit/yoondisk/MediaSAFE_HD_Basic?color=yellow)
 
 # MediaSAFE_HD_Basic
-개방형OS(Operating System-운영체제) PC에 설치 후 서비스 이용이 가능한 Digital Rights Management (디지털 저작권 관리, 이하 DRM) 플레이어 플랫폼
+개방형OS(Operating System-운영체제) PC에 설치 후 서비스 이용이 가능한 Digital Rights Management <br> (디지털 저작권 관리, 이하 DRM) 플레이어 플랫폼
 
 ## 설계
 - 개방형OS에 사용된 커널 버전(데미안 10.X) 분석
