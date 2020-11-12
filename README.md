@@ -24,7 +24,7 @@
 - 해상도 변경 기능 및 볼륨 조절 기능
 
 ## 효과
- ◦ 개방형OS를 이용하는 PC및 클라우드 환경에서, 생방송, 영상 콘텐츠 서비스시에 콘텐츠의 안전한 보호와 불법적 유출을 방지
+ ◦ 개방형OS를 이용하는 PC및 클라우드 환경에서, 생방송, 영상 콘텐츠 서비스시에 콘텐츠의 <br> 안전한 보호와 불법적 유출을 방지
 
 ## LICENSE
 MediaSAFE_HD_Basic is <a href="https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/LICENSE.md">licensed</a> under the GPL, Version 2.0
