@@ -1,0 +1,9 @@
+ ; YoonMp4_Isapi.def : declares the module parameters for the DLL.
+ 
+LIBRARY         "YoonMp4_Isapi.dll"
+ 
+EXPORTS
+    HttpExtensionProc
+    GetExtensionVersion
+    TerminateExtension
+ 
