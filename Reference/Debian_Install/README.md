@@ -8,7 +8,7 @@
 1. 리눅스 shall 실행
 2. uname -r 명령어 입력
 3. 커널 버전 확인
-    - Harmony OS -> 4.15 version
+    - Hamonica OS -> 4.15 version
     - Gooroom OS -> 4.19 version
     - Tmax OS -> 4.19 version
 
@@ -24,7 +24,7 @@
 * Debian7 Wheezy
   * 3.2 지원
 
-※ Harmony OS 4.15 -> 4.19도 호환가능 연락 확인 -> Debian10으로 진행
+※ Hamonica OS 4.15 -> 4.19도 호환가능 연락 확인 -> Debian10으로 진행
 
 </br>
 
@@ -42,13 +42,7 @@
 
  [[참고사이트]](https://maternalgrandfather.tistory.com/entry/UEFI%EB%A1%9C-%EC%9C%88%EB%8F%84%EC%9A%B010-%EC%84%A4%EC%B9%98%EC%8B%9C-%EB%B0%94%EC%9D%B4%EC%98%A4%EC%8A%A4-%EC%84%A4%EC%A0%95%ED%95%98%EB%8A%94-%EB%B2%95)
 
-</br>
 
-## 3. 설치 
-
-1. [Grphic Install Guide](https://github.com/yoondisk/MediaSAFE_HD_Basic/blob/master/Debian_Install/Graphic_Install_Guide.md)
-
-<img src="https://user-images.githubusercontent.com/65989325/84010077-1bdc1300-a9af-11ea-94d7-6d19789876c0.png">
 
 
 
