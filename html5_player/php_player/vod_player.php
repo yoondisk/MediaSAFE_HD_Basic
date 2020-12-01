@@ -26,7 +26,6 @@ if ($_GET[rtsp]==1) {
 	
 	$encstring = encrypt($g_bszIV, $g_bszUser_key, $org_rtsp_url).".mp4";
 }
-$encstring="KujWJFs4aAskA7w2/sRJSepwYty/UyD5ehJaOT585HJupp6ZhYeONZKQ7Jdt2rGx5TwoWlZbw+ZbQlwC9jCX9ley9otwgTKysotGBCmjMIE=".".rtsp";
 
 
 ?>
