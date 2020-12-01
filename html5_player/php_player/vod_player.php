@@ -139,7 +139,7 @@ $encstring="KujWJFs4aAskA7w2/sRJSepwYty/UyD5ehJaOT585HJupp6ZhYeONZKQ7Jdt2rGx5Two
 	install_update=install_update+"<br><a href='"+install_app_url+"'><font color=red>MediaSafe.deb 다운로드</font></a></td></tr></table>";
 
 	var init_drm=0;
-	var drm_ip='192.168.0.34:9002';
+	var drm_ip='127.0.0.1:9002';
 	var vod_type='video/mp4';
 
 	var min_bar_height=41;
